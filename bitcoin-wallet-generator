@@ -1,0 +1,59 @@
+from bip_utils import Bip39MnemonicGenerator, Bip39SeedGenerator, Bip44, Bip44Coins, Bip44Changes
+
+def generate_wallet():
+    # 1. Generate 12-word seed phrase (mnemonic)
+    mnemonic = Bip39MnemonicGenerator().FromWordsNumber(12)
+    print("\n")
+    
+
+    # 2. Generate seed bytes from mnemonic
+    seed_bytes = Bip39SeedGenerator(mnemonic).Generate()
+
+    # 3. Generate Bitcoin wallet (BIP44)
+    bip44_mst = Bip44.FromSeed(seed_bytes, Bip44Coins.BITCOIN)
+    bip44_acc = bip44_mst.Purpose().Coin().Account(0)
+    bip44_chg = bip44_acc.Change(Bip44Changes.CHAIN_EXT)
+    bip44_addr = bip44_chg.AddressIndex(0)
+
+    # 4. Output wallet info
+    print("\n")
+    print("Wallet created successfully!")
+    print("Seed Phrase  :", mnemonic)
+    print("Address      :", bip44_addr.PublicKey().ToAddress())
+    print("Public Key   :", bip44_addr.PublicKey().RawCompressed().ToHex())
+    print("Private Key  :", bip44_addr.PrivateKey().Raw().ToHex())
+
+def recover_wallet():
+    # 1. Input seed phrase
+    mnemonic = input("Enter seed phrase (12/24 words):\n> ").strip()
+
+    try:
+        # 2. Generate seed dari mnemonic
+        seed_bytes = Bip39SeedGenerator(mnemonic).Generate()
+
+        # 3. Buat dompet Bitcoin dari seed
+        bip44_mst = Bip44.FromSeed(seed_bytes, Bip44Coins.BITCOIN)
+        bip44_acc = bip44_mst.Purpose().Coin().Account(0)
+        bip44_chg = bip44_acc.Change(Bip44Changes.CHAIN_EXT)
+        bip44_addr = bip44_chg.AddressIndex(0)
+
+        # 4. Tampilkan detail dompet
+        print("\n")
+        print("Wallet successfully recovered!")
+        print("Address      :", bip44_addr.PublicKey().ToAddress())
+        print("Public Key   :", bip44_addr.PublicKey().RawCompressed().ToHex())
+        print("Private Key  :", bip44_addr.PrivateKey().Raw().ToHex())
+
+    except Exception as e:
+        print("\n")
+        print("Failed to recover wallet.")
+        print("Error:", str(e))
+
+option = input("Choose option:\n1. Create a new wallet\n2. Recover wallet from seed phrase\n> ")
+
+if option == "1":
+    generate_wallet()
+elif option == "2":
+    recover_wallet()
+else:
+    print("Invalid option. Please select 1 or 2.")
